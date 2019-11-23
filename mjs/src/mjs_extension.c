@@ -78,6 +78,27 @@ static void mjs_op_sys_parseInt(struct mjs *jsm)
     mjs_return(jsm, ret);
 }
 
+static void mjs_op_sys_parseFloat(struct mjs *jsm)
+{
+    mjs_val_t ret = MJS_UNDEFINED;
+
+    if (mjs_nargs(jsm) < 1) {
+        mjs_prepend_errorf(jsm, MJS_TYPE_ERROR, "missing a value");
+    } else {
+        mjs_val_t p = mjs_arg(jsm, 0);
+        if (mjs_is_number(p)) {
+            ret = mjs_mk_number(jsm, mjs_get_double(jsm, p));
+        } else if (mjs_is_string(p)) {
+            const char *nums = mjs_get_string(jsm, &p, NULL);
+            double num = 0;
+            if (nums) num = atof(nums);
+            ret = mjs_mk_number(jsm, num);
+        }
+    }
+
+    mjs_return(jsm, ret);
+}
+
 static void mjs_op_sys_delete(struct mjs *jsm)
 {
     mjs_val_t ret = MJS_UNDEFINED;
@@ -161,6 +182,7 @@ void mjs_init_local(struct mjs *jsm, mjs_val_t o)
 
     mjs_set(jsm, o, "SYS", ~0, sys);
     mjs_set(jsm, sys, "parseInt", ~0, mjs_mk_foreign(jsm, mjs_op_sys_parseInt));
+    mjs_set(jsm, sys, "parseFloat", ~0, mjs_mk_foreign(jsm, mjs_op_sys_parseFloat));
     mjs_set(jsm, sys, "objDelete", ~0, mjs_mk_foreign(jsm, mjs_op_sys_delete));
     mjs_set(jsm, sys, "regMatch", ~0, mjs_mk_foreign(jsm, mjs_op_sys_regMatch));
 }
