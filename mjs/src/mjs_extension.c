@@ -21,11 +21,16 @@ static void mjs_op_time_systime(struct mjs *jsm)
 
     gettimeofday(&tv, NULL);
     tm = localtime(&tv.tv_sec);
-    strftime(timestr, 25, "%Y-%m-%d %H:%M:%S", tm);
-    timestr[24] = '\0';
 
     ret = mjs_mk_object(jsm);
+    memset(timestr, 0x0, sizeof(timestr));
+    strftime(timestr, 25, "%Y%m%d%H%M%S", tm);
+    mjs_set(jsm, ret, "digittime", ~0, mjs_mk_string(jsm, timestr, ~0, 1));
+
+    memset(timestr, 0x0, sizeof(timestr));
+    strftime(timestr, 25, "%Y-%m-%d %H:%M:%S", tm);
     mjs_set(jsm, ret, "localtime", ~0, mjs_mk_string(jsm, timestr, ~0, 1));
+
     mjs_set(jsm, ret, "timestamp", ~0, mjs_mk_number(jsm, time(NULL)));
 
     mjs_set(jsm, ret, "year", ~0, mjs_mk_number(jsm, tm->tm_year + 1900));
@@ -123,13 +128,14 @@ static void mjs_op_sys_regMatch(struct mjs *jsm)
 {
     mjs_val_t ret = MJS_UNDEFINED;
 
-    if (mjs_nargs(jsm) < 2) {
+    if (mjs_nargs(jsm) < 3) {
         mjs_prepend_errorf(jsm, MJS_TYPE_ERROR, "missing argument");
     } else {
         mjs_val_t s = mjs_arg(jsm, 0);
         mjs_val_t r = mjs_arg(jsm, 1);
+        mjs_val_t ignore_case = mjs_arg(jsm, 2);
 
-        if (!mjs_is_string(s) || !mjs_is_string(s)) {
+        if (!mjs_is_string(s) || !mjs_is_string(s) || !mjs_is_boolean(ignore_case)) {
             mjs_prepend_errorf(jsm, MJS_TYPE_ERROR, "argument not string");
             goto done;
         }
@@ -151,7 +157,7 @@ static void mjs_op_sys_regMatch(struct mjs *jsm)
             goto done;
         }
 
-        if (mre_match(reo, ps, false)) {
+        if (mre_match(reo, ps, mjs_get_bool(jsm, ignore_case))) {
             for (uint32_t i = 0; i < mre_sub_count(reo, 0); i++) {
                 const char *sp, *ep;
                 if (mre_sub_get(reo, 0, i, &sp, &ep)) {
