@@ -175,12 +175,17 @@ static mjs_val_t do_op(struct mjs *mjs, mjs_val_t a, mjs_val_t b, int op) {
   } else if (op == TOK_PLUS) {
     char tok[32];
     if (mjs_is_number(a)) {
-        /* TODO int, float ? */
-      snprintf(tok, sizeof(tok), "%d", mjs_get_int(mjs, a));
-      ret = s_concat(mjs, mjs_mk_string(mjs, tok, ~0, 0), b);
+        int ix = mjs_get_int(mjs, a);
+        double dx = mjs_get_double(mjs, a);
+        if (fabs(dx - ix) < 0.0001) snprintf(tok, sizeof(tok), "%d", ix);
+        else snprintf(tok, sizeof(tok), "%.2f", dx);
+        ret = s_concat(mjs, mjs_mk_string(mjs, tok, ~0, 0), b);
     } else {
-      snprintf(tok, sizeof(tok), "%d", mjs_get_int(mjs, b));
-      ret = s_concat(mjs, a, mjs_mk_string(mjs, tok, ~0, 0));
+        int ix = mjs_get_int(mjs, b);
+        double dx = mjs_get_double(mjs, b);
+        if (fabs(dx - ix) < 0.0001) snprintf(tok, sizeof(tok), "%d", ix);
+        else snprintf(tok, sizeof(tok), "%.2f", dx);
+        ret = s_concat(mjs, a, mjs_mk_string(mjs, tok, ~0, 0));
     }
   } else {
     set_no_autoconversion_error(mjs);
