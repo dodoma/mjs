@@ -238,7 +238,7 @@ static int parse_string(struct frozen *f) {
     for (; f->cur < f->end; f->cur += len) {
       ch = *(unsigned char *) f->cur;
       len = get_utf8_char_len((unsigned char) ch);
-      EXPECT(ch >= 32 && len > 0, JSON_STRING_INVALID); /* No control chars */
+      EXPECT((ch == 9 || ch == 10 || ch >= 32) && len > 0, JSON_STRING_INVALID); /* No control chars */
       EXPECT(len <= left(f), JSON_STRING_INCOMPLETE);
       if (ch == '\\') {
         EXPECT((n = get_escape_len(f->cur + 1, left(f))) > 0, n);
